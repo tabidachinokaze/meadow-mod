@@ -2,14 +2,14 @@
 	"schemaVersion": 1,
 	"id": "meadow",
 	"version": "${version}",
-	"name": "meadow",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"name": "Meadow",
+	"description": "mods connected to the Meadow backend",
 	"authors": [
-		"Me!"
+		"tabidachinokaze"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://meadow.tabidachi.moe/",
+		"sources": "https://github.com/tabidachinokaze/meadow-mod"
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/meadow/icon.png",
