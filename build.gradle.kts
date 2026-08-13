@@ -4,6 +4,8 @@ plugins {
     id("net.fabricmc.fabric-loom")
     `maven-publish`
     id("org.jetbrains.kotlin.jvm") version "2.4.10"
+    id("io.ktor.plugin") version "3.5.2"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.4.10"
 }
 
 version = providers.gradleProperty("mod_version").get()
@@ -42,6 +44,16 @@ dependencies {
     // Fabric API. This is technically optional, but you probably want it anyway.
     implementation("net.fabricmc.fabric-api:fabric-api:${providers.gradleProperty("fabric_api_version").get()}")
     implementation("net.fabricmc:fabric-language-kotlin:${providers.gradleProperty("fabric_kotlin_version").get()}")
+
+    // ktor client
+    implementation("io.ktor:ktor-client-core")
+    implementation("io.ktor:ktor-client-cio")
+    implementation("io.ktor:ktor-client-content-negotiation")
+    implementation("io.ktor:ktor-client-logging")
+    implementation("io.ktor:ktor-client-websockets")
+    implementation("io.ktor:ktor-serialization-kotlinx-json")
+
+    testImplementation(kotlin("test"))
 }
 
 tasks.processResources {
