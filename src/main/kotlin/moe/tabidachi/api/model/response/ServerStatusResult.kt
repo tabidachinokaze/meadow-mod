@@ -3,7 +3,7 @@ package moe.tabidachi.api.model.response
 import kotlinx.serialization.Serializable
 import kotlin.time.Instant
 
-/** 状态上报响应（对应后端 ServerStatusResult，camelCase JSON） */
+/** 状态上报响应（对应后端 ServerStatusResult，snake_case JSON） */
 @Serializable
 data class ServerStatusResult(
     val onlinePlayers: Int = 0,

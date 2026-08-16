@@ -3,6 +3,7 @@ package moe.tabidachi.shared
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpSend
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
@@ -36,9 +37,16 @@ fun SharedHttpClient(
                 format = json
             )
         }
+        install(HttpTimeout) {
+            // 防黑洞连接挂死协程（后端半死状态时上报/聊天循环停摆）
+            connectTimeoutMillis = 5_000
+            requestTimeoutMillis = 10_000
+            socketTimeoutMillis = 10_000
+        }
         install(Logging) {
             format = LoggingFormat.Default
-            level = LogLevel.ALL
+            // 不记录请求/响应体：避免密码、验证码、server_key 等敏感信息落入日志（S1/S2）
+            level = LogLevel.INFO
             logger = Logger.SIMPLE
             sanitizeHeader { header -> header == HttpHeaders.Authorization }
         }

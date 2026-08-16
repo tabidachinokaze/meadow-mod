@@ -9,6 +9,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.contentOrNull
@@ -29,7 +30,11 @@ class AgentWsClient(
     private val configStorage: ConfigStorage,
 ) {
     private val LOGGER = LoggerFactory.getLogger("AgentWsClient")
-    private val json = Json { ignoreUnknownKeys = true }
+    private val json = Json {
+        ignoreUnknownKeys = true
+        // 与后端一致：全局 snake_case
+        namingStrategy = JsonNamingStrategy.SnakeCase
+    }
     private var job: Job? = null
     private var server: MinecraftServer? = null
 
@@ -73,7 +78,7 @@ class AgentWsClient(
     private fun handleMessage(text: String) {
         val obj = json.parseToJsonElement(text).jsonObject
         val content = obj["content"]?.jsonPrimitive?.contentOrNull ?: return
-        val sender = obj["senderName"]?.jsonPrimitive?.contentOrNull ?: "系统"
+        val sender = obj["sender_name"]?.jsonPrimitive?.contentOrNull ?: "系统"
         val type = obj["type"]?.jsonPrimitive?.contentOrNull ?: "chat"
         val mcServer = server ?: return
         mcServer.execute {
