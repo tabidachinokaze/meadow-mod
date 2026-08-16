@@ -8,15 +8,21 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import moe.tabidachi.api.model.ServerInfo
+import moe.tabidachi.api.model.request.AgentChatReportRequest
 import moe.tabidachi.api.model.request.GameIdBindRequest
 import moe.tabidachi.api.model.request.ServerInitializeRequest
 import moe.tabidachi.api.model.request.ServerRegisterRequest
+import moe.tabidachi.api.model.request.ServerStatusRequest
 import moe.tabidachi.api.model.response.Response
 
 interface ServerApi {
     suspend fun registerServer(request: ServerRegisterRequest): Response<ServerInfo?>
     suspend fun initializeServer(serverId: Long, request: ServerInitializeRequest): Response<ServerInfo?>
     suspend fun bind(serverId: Long, request: GameIdBindRequest): Response<String?>
+    /** Agent 定时状态上报（server_key + machine_id 认证） */
+    suspend fun syncStatus(serverId: Long, request: ServerStatusRequest): Response<Unit?>
+    /** Agent 上报聊天消息（server_key + machine_id 认证） */
+    suspend fun reportAgentChat(serverId: Long, request: AgentChatReportRequest): Response<Unit?>
 }
 
 class ServerApiImpl(
@@ -55,4 +61,26 @@ class ServerApiImpl(
             setBody(request)
         }.body()
     }
+
+    override suspend fun syncStatus(serverId: Long, request: ServerStatusRequest): Response<Unit?> =
+        withContext(dispatcher) {
+            client.post(baseUrl()) {
+                url {
+                    appendPathSegments("servers", "$serverId", "sync", "status")
+                }
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }.body()
+        }
+
+    override suspend fun reportAgentChat(serverId: Long, request: AgentChatReportRequest): Response<Unit?> =
+        withContext(dispatcher) {
+            client.post(baseUrl()) {
+                url {
+                    appendPathSegments("servers", "$serverId", "sync", "chat")
+                }
+                contentType(ContentType.Application.Json)
+                setBody(request)
+            }.body()
+        }
 }

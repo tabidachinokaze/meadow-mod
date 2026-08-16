@@ -17,6 +17,7 @@ import moe.tabidachi.shared.SharedHttpClient
 import moe.tabidachi.shared.SharedJson
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents
 import net.minecraft.commands.CommandBuildContext
 import net.minecraft.commands.CommandSourceStack
 import net.minecraft.commands.Commands
@@ -59,6 +60,16 @@ object Meadow : ModInitializer, CoroutineScope by CoroutineScope(Dispatchers.Def
         scope = this,
         configStorage = configStorage
     )
+    private val agentReporter: AgentReporter = AgentReporter(
+        scope = this,
+        serverApi = serverApi,
+        configStorage = configStorage
+    )
+    private val chatReporter: ChatReporter = ChatReporter(
+        scope = this,
+        serverApi = serverApi,
+        configStorage = configStorage
+    )
 
     override fun onInitialize() {
         // This code runs as soon as Minecraft is in a mod-load-ready state.
@@ -67,34 +78,22 @@ object Meadow : ModInitializer, CoroutineScope by CoroutineScope(Dispatchers.Def
 
         LOGGER.info("Hello Fabric world!")
 
+        // 服务器启动完成后启动 Agent 定时上报（§9.12）；停止时取消
+        ServerLifecycleEvents.SERVER_STARTED.register { server ->
+            agentReporter.start(server)
+        }
+        ServerLifecycleEvents.SERVER_STOPPING.register {
+            agentReporter.stop()
+        }
+
+        // 监听游戏内聊天并上报（§9.12 实时事件）
+        chatReporter.register()
+
         CommandRegistrationCallback.EVENT.register { dispatcher: CommandDispatcher<CommandSourceStack>, context: CommandBuildContext, selection: Commands.CommandSelection ->
             val meadowLiteral = Commands.literal("meadow")
             authCommand.register(meadowLiteral)
             serverCommand.register(meadowLiteral)
             dispatcher.register(meadowLiteral)
-            dispatcher.register(
-                Commands
-                    .literal("fetch_code")
-                    .then(
-                        Commands
-                            .argument("key", StringArgumentType.string())
-                            .executes {
-                                val player = it.source.player
-                                if (player != null) {
-                                    val code = it.getArgument("code", String::class.java)
-                                    LOGGER.info("player ${player.nameAndId()} send code $code")
-                                    it.source.sendSuccess(
-                                        { Component.literal("验证码已发送") },
-                                        false
-                                    )
-                                    Command.SINGLE_SUCCESS
-                                } else {
-                                    0
-                                }
-                            }
-                            .build()
-                    )
-            )
         }
     }
 

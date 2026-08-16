@@ -114,3 +114,8 @@ publishing {
         // retrieving dependencies.
     }
 }
+
+// io.ktor.plugin 引入的 shadow 需要 mainClass（面向 Ktor 应用）；Fabric mod 用 remapJar 分发，禁用 shadow
+tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+    enabled = false
+}
