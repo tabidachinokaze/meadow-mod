@@ -70,6 +70,12 @@ object Meadow : ModInitializer, CoroutineScope by CoroutineScope(Dispatchers.Def
         serverApi = serverApi,
         configStorage = configStorage
     )
+    private val agentWsClient: AgentWsClient = AgentWsClient(
+        scope = this,
+        httpClient = httpClient,
+        baseUrl = baseUrlProvider(),
+        configStorage = configStorage
+    )
 
     override fun onInitialize() {
         // This code runs as soon as Minecraft is in a mod-load-ready state.
@@ -78,12 +84,14 @@ object Meadow : ModInitializer, CoroutineScope by CoroutineScope(Dispatchers.Def
 
         LOGGER.info("Hello Fabric world!")
 
-        // 服务器启动完成后启动 Agent 定时上报（§9.12）；停止时取消
+        // 服务器启动完成后启动 Agent 定时上报 + 广播接收（§9.12）；停止时取消
         ServerLifecycleEvents.SERVER_STARTED.register { server ->
             agentReporter.start(server)
+            agentWsClient.start(server)
         }
         ServerLifecycleEvents.SERVER_STOPPING.register {
             agentReporter.stop()
+            agentWsClient.stop()
         }
 
         // 监听游戏内聊天并上报（§9.12 实时事件）
