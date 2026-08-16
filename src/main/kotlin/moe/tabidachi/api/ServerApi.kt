@@ -14,13 +14,14 @@ import moe.tabidachi.api.model.request.ServerInitializeRequest
 import moe.tabidachi.api.model.request.ServerRegisterRequest
 import moe.tabidachi.api.model.request.ServerStatusRequest
 import moe.tabidachi.api.model.response.Response
+import moe.tabidachi.api.model.response.ServerStatusResult
 
 interface ServerApi {
     suspend fun registerServer(request: ServerRegisterRequest): Response<ServerInfo?>
     suspend fun initializeServer(serverId: Long, request: ServerInitializeRequest): Response<ServerInfo?>
     suspend fun bind(serverId: Long, request: GameIdBindRequest): Response<String?>
     /** Agent 定时状态上报（server_key + machine_id 认证） */
-    suspend fun syncStatus(serverId: Long, request: ServerStatusRequest): Response<Unit?>
+    suspend fun syncStatus(serverId: Long, request: ServerStatusRequest): Response<ServerStatusResult?>
     /** Agent 上报聊天消息（server_key + machine_id 认证） */
     suspend fun reportAgentChat(serverId: Long, request: AgentChatReportRequest): Response<Unit?>
 }
@@ -62,7 +63,7 @@ class ServerApiImpl(
         }.body()
     }
 
-    override suspend fun syncStatus(serverId: Long, request: ServerStatusRequest): Response<Unit?> =
+    override suspend fun syncStatus(serverId: Long, request: ServerStatusRequest): Response<ServerStatusResult?> =
         withContext(dispatcher) {
             client.post(baseUrl()) {
                 url {

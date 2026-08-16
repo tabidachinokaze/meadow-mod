@@ -94,14 +94,14 @@ class AgentReporter(
 
     @Suppress("UNCHECKED_CAST")
     private fun collectMods(): List<ServerStatusRequest.ModStatus> {
-        // 通过 FabricLoader 枚举已加载的 mod（排除平台 mod）
+        // 通过 FabricLoader 枚举已加载的 mod，排除平台/依赖 mod（仅上报玩家可见的内容 mod）
         val fabricLoader = net.fabricmc.loader.api.FabricLoader.getInstance()
         val containers = fabricLoader.allMods
         val result = ArrayList<ServerStatusRequest.ModStatus>()
         for (container in containers) {
             val metadata: net.fabricmc.loader.api.metadata.ModMetadata = container.metadata
             val id = metadata.id
-            if (id in PLATFORM_MODS) continue
+            if (isPlatformMod(id)) continue
             val version = runCatching { metadata.version.friendlyString }.getOrNull() ?: ""
             result.add(
                 ServerStatusRequest.ModStatus(
@@ -113,10 +113,22 @@ class AgentReporter(
         return result
     }
 
+    /** 平台/依赖 mod：fabric 模块、kotlin/kotlinx 运行时、mixin 等一律不上报 */
+    private fun isPlatformMod(id: String): Boolean {
+        if (id in PLATFORM_MODS) return true
+        return id.startsWith("fabric-") ||
+            id.startsWith("kotlin") ||
+            id.startsWith("kotlinx-") ||
+            id == "mixin" ||
+            id == "MixinExtras" ||
+            id == "minecraft"
+    }
+
     companion object {
         private val PLATFORM_MODS = setOf(
             "fabric", "fabricloader", "minecraft", "fabric-language-kotlin",
             "java", "kotlin-stdlib", "fabric-api", "fabric-command-api-v2",
+            "atomicfu", "atomicfu-jvm",
         )
     }
 }
