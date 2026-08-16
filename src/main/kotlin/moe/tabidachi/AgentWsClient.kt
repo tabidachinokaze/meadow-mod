@@ -1,6 +1,8 @@
 package moe.tabidachi
 
 import io.ktor.client.plugins.websocket.webSocket
+import io.ktor.client.request.header
+import io.ktor.client.request.url
 import io.ktor.websocket.Frame
 import io.ktor.websocket.readText
 import kotlinx.coroutines.CoroutineScope
@@ -63,7 +65,12 @@ class AgentWsClient(
         val machineId = configStorage.machineId
         val wsUrl = baseUrl.replace("https://", "wss://").replace("http://", "ws://")
         httpClient.webSocket(
-            urlString = "$wsUrl/ws/agent?server_id=$serverId&server_key=${encode(serverKey)}&machine_id=${encode(machineId)}"
+            // server_key / machine_id 走请求头，避免出现在 URL（防代理日志/历史记录泄露凭据）
+            request = {
+                url("$wsUrl/ws/agent?server_id=$serverId")
+                header("X-Server-Key", serverKey)
+                header("X-Machine-Id", machineId)
+            }
         ) {
             LOGGER.info("AgentWsClient: 已连接")
             for (frame in incoming) {
@@ -92,6 +99,4 @@ class AgentWsClient(
             LOGGER.info("AgentWsClient 广播: $message")
         }
     }
-
-    private fun encode(s: String): String = java.net.URLEncoder.encode(s, "UTF-8")
 }

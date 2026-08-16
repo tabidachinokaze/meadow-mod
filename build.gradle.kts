@@ -45,13 +45,20 @@ dependencies {
     implementation("net.fabricmc.fabric-api:fabric-api:${providers.gradleProperty("fabric_api_version").get()}")
     implementation("net.fabricmc:fabric-language-kotlin:${providers.gradleProperty("fabric_kotlin_version").get()}")
 
-    // ktor client
-    implementation("io.ktor:ktor-client-core")
-    implementation("io.ktor:ktor-client-cio")
-    implementation("io.ktor:ktor-client-content-negotiation")
-    implementation("io.ktor:ktor-client-logging")
-    implementation("io.ktor:ktor-client-websockets")
-    implementation("io.ktor:ktor-serialization-kotlinx-json")
+    // ktor client（Fabric mod 需用 include() 打包进 jar，否则生产环境 NoClassDefFoundError）
+    val ktorVersion = providers.gradleProperty("ktor_version").get()
+    implementation("io.ktor:ktor-client-core:$ktorVersion")
+    include("io.ktor:ktor-client-core:$ktorVersion")
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+    include("io.ktor:ktor-client-cio:$ktorVersion")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    include("io.ktor:ktor-client-content-negotiation:$ktorVersion")
+    implementation("io.ktor:ktor-client-logging:$ktorVersion")
+    include("io.ktor:ktor-client-logging:$ktorVersion")
+    implementation("io.ktor:ktor-client-websockets:$ktorVersion")
+    include("io.ktor:ktor-client-websockets:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+    include("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
 
     testImplementation(kotlin("test"))
 }
