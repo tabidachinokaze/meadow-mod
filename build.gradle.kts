@@ -48,17 +48,34 @@ dependencies {
     // ktor client（Fabric mod 需用 include() 打包进 jar，否则生产环境 NoClassDefFoundError）
     val ktorVersion = providers.gradleProperty("ktor_version").get()
     implementation("io.ktor:ktor-client-core:$ktorVersion")
-    include("io.ktor:ktor-client-core:$ktorVersion")
     implementation("io.ktor:ktor-client-cio:$ktorVersion")
-    include("io.ktor:ktor-client-cio:$ktorVersion")
     implementation("io.ktor:ktor-client-content-negotiation:$ktorVersion")
-    include("io.ktor:ktor-client-content-negotiation:$ktorVersion")
     implementation("io.ktor:ktor-client-logging:$ktorVersion")
-    include("io.ktor:ktor-client-logging:$ktorVersion")
     implementation("io.ktor:ktor-client-websockets:$ktorVersion")
-    include("io.ktor:ktor-client-websockets:$ktorVersion")
     implementation("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
-    include("io.ktor:ktor-serialization-kotlinx-json:$ktorVersion")
+    // 打包全部 ktor 运行时构件（含传递依赖：ktor-utils/ktor-io/ktor-http/ktor-network/ktor-websockets/
+    // ktor-serialization/ktor-sse 等），避免运行时 NoClassDefFoundError（如 io.ktor.util.PlatformUtils）
+    listOf(
+        "ktor-client-core", "ktor-client-cio", "ktor-client-content-negotiation",
+        "ktor-client-logging", "ktor-client-websockets", "ktor-serialization-kotlinx-json",
+        "ktor-http", "ktor-http-cio", "ktor-utils", "ktor-io",
+        "ktor-network", "ktor-network-tls", "ktor-events", "ktor-websockets",
+        "ktor-websocket-serialization", "ktor-serialization", "ktor-serialization-kotlinx", "ktor-sse",
+    ).forEach { module ->
+        include("io.ktor:$module-jvm:$ktorVersion")
+    }
+
+    // ktor 运行时依赖的 kotlinx 库：必须打包匹配版本，否则与 Fabric 环境自带的旧版冲突
+    // （NoSuchMethodError: Job.cancel$default / invokeOnCompletion$default 等）
+    val kotlinxVersion = "1.11.0"
+    include("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$kotlinxVersion")
+    include("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlinxVersion")
+    include("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:$kotlinxVersion")
+    include("org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:$kotlinxVersion")
+    include("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinxVersion")
+    include("org.jetbrains.kotlinx:kotlinx-serialization-json-io-jvm:$kotlinxVersion")
+    include("org.jetbrains.kotlinx:kotlinx-io-core-jvm:0.9.1")
+    include("org.jetbrains.kotlinx:kotlinx-io-bytestring-jvm:0.9.1")
 
     testImplementation(kotlin("test"))
 }
